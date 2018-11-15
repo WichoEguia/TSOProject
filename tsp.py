@@ -1,14 +1,8 @@
 import math
 import sys
 import time
+from Node import Node
 from TspPath import Path
-
-class Node:
-    def __init__(self, id, x, y):
-        self.id = id
-        self.x = x
-        self.y = y
-        self.visited = False
 
 def calculateDistance(city1, city2):
     x_distance = abs(city1.x - city2.x)
@@ -24,7 +18,7 @@ def fileImport(filename):
             lineNumbers = line.split()
             for num in lineNumbers:
                 numArray.append(int(num))
-            Nodes.append(Node(numArray[0], numArray[1], numArray[2]))
+            Nodes.append(Node([numArray[0], numArray[1], numArray[2]]))
 
     return Nodes
 
@@ -32,7 +26,7 @@ def fileExport(filename, tour, distance):
     with open(filename + ".tour", "w") as myFile:
         myFile.write(str(distance) + '\n')
         for city in tour:
-            myFile.write("%d\n" % city.id)
+            myFile.write("%d\n" % city.idx)
 
 def calculateTotalDistance(route):
     tot = 0
@@ -46,7 +40,7 @@ def findClosestNeighbor(v, route):
     shortestEdgeLength = 99999999999
     closestNeighbor = None
     for c in route:
-        if c.id != v.id:
+        if c.idx != v.idx:
             distance = calculateDistance(v, c)
             if shortestEdgeLength > distance:
                 closestNeighbor = c
@@ -83,7 +77,8 @@ def twoOptSwap(route, i, k):
 
     return new_route
 
-def findTSPSolution(s, timeAvailable):
+
+def find2optSolution(s, timeAvailable):
     improvement = True
     start = time.time()
     end = start + timeAvailable
@@ -110,46 +105,63 @@ def findTSPSolution(s, timeAvailable):
 def printTour(s):
     sys.stdout.write("ORDER: ")
     for c in s:
-        sys.stdout.write(str(c.id) + ' ')
+        sys.stdout.write(str(c.idx) + ' ')
     print('/n')
     print("Distance: " + str(calculateTotalDistance(s)))
 
 def main():
     start = time.time()
 
+    # Get file by param
     if len(sys.argv) < 2:
         print("Please enter the file name.")
         exit()
     filename = sys.argv[1]
 
+    # Get 2opt execution time
     if len(sys.argv) == 3:
-        totalTime = float(sys.argv[2]) * 60 - 1
+        twoOptTime = float(sys.argv[2]) * 60 - 1
     else:
-        totalTime = 179.0
+        twoOptTime = 179.0
 
-    s = fileImport(filename)
-
-    greedy = nearestNeighbor(s)
-    s = fileImport(filename)
-
-    print("\nAFTER NEAREST NEIGHBOR PASS")
-    printTour(greedy)
-
-    if calculateTotalDistance(greedy) < calculateTotalDistance(s):
-        s = greedy
+    # Get global iterations
+    if len(sys.argv) == 4:
+        globalIterations = int(sys.argv[3])
     else:
-        print("Greedy solution discarded.")
+        globalIterations = 1
 
-    timeAvailable = totalTime - (time.time() - start)
-    s = findTSPSolution(s, timeAvailable)
-    s.append(s[0])
-    fileExport(filename, s, calculateTotalDistance(s))
+    # Init global loop
+    globalCounterIterator = 0
+    while True:
+        # print('ITERATION:' + str(globalCounterIterator + 1))
+        globalCounterIterator += 1
 
-    print("\nAFTER 2OPT")
-    printTour(s)
+        s = fileImport(filename)
+        greedy = nearestNeighbor(s)
+
+        s = fileImport(filename) # Reset the array of nodes
+
+        # print("\nAFTER NEAREST NEIGHBOR PASS")
+        # printTour(greedy)
+
+        if calculateTotalDistance(greedy) < calculateTotalDistance(s):
+            s = greedy
+        else:
+            print("Greedy solution discarded.")
+
+        time2optAvailable = twoOptTime - (time.time() - start)
+        s = find2optSolution(s, time2optAvailable)
+        s.append(s[0])
+
+        # print("\nAFTER 2OPT")
+        # printTour(s)
+
+        if globalCounterIterator >= globalIterations:
+            break
+
     end = time.time()
     timeElapsed = end - start
-    print("TIME ALLOCATED: %f" % (totalTime + 1))
+    # print("TIME ALLOCATED: %f" % (globalTime + 1))
     print("TIME USED: %f" % timeElapsed)
     Path(s)
 
