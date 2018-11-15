@@ -106,7 +106,7 @@ def printTour(s):
     sys.stdout.write("ORDER: ")
     for c in s:
         sys.stdout.write(str(c.idx) + ' ')
-    print('/n')
+    print('\n')
     print("Distance: " + str(calculateTotalDistance(s)))
 
 def main():
@@ -121,13 +121,13 @@ def main():
     filename = sys.argv[1]
 
     # Get 2opt execution time
-    if len(sys.argv) == 3:
+    if len(sys.argv) >= 3:
         twoOptTime = float(sys.argv[2]) * 60 - 1
     else:
         twoOptTime = 179.0
 
     # Get global iterations
-    if len(sys.argv) == 4:
+    if len(sys.argv) >= 4:
         globalIterations = int(sys.argv[3])
     else:
         globalIterations = 1
@@ -135,7 +135,7 @@ def main():
     # Init global loop
     globalCounterIterator = 0
     while True:
-        # print("ITERATION: " + str(globalCounterIterator + 1))
+        # print("--------------------------------------------------------")
         globalCounterIterator += 1
 
         s = fileImport(filename)
@@ -158,8 +158,11 @@ def main():
         # print("\nAFTER 2OPT")
         # printTour(s)
 
+        # print("--------------------------------------------------------")
+
         if betterFound > calculateTotalDistance(s):
             finalTour = s
+            betterFound = calculateTotalDistance(s)
 
         if globalCounterIterator >= globalIterations:
             break
@@ -167,7 +170,7 @@ def main():
     end = time.time()
     timeElapsed = end - start
     printTour(finalTour)
-    # print("TIME ALLOCATED: %f" % (globalTime + 1))
+    print("TIME ALLOCATED: %f" % (twoOptTime + 1))
     print("TIME USED: %f" % timeElapsed)
     Path(finalTour)
 
