@@ -1,178 +1,212 @@
-import math
-import sys
-import time
+"""
+Command: py TSP-grasp_nearest_neighbor.py file_path number_of_iterations
+"""
+
 from Node import Node
+from sys import argv
+import random
+import time
+from operator import itemgetter
+from twoOpt import TwoOpt
 from TspPath import Path
 
-def calculateDistance(city1, city2):
-    x_distance = abs(city1.x - city2.x)
-    y_distance = abs(city1.y - city2.y)
+class NearestNeighbor():
+    def __init__(self, k=1, alpha=0, method=1):
+        self.nodes = self.getNodes()
+        self.tour = []
+        self.k = k
+        self.alpha = alpha
+        self.method = method
 
-    return int(round(math.sqrt(x_distance * x_distance + y_distance * y_distance)))
+    """
+    description: Get the set of nodes from the file pased
+    return: the set of all the nodes
+    """
+    def getNodes(self):
+        rfile = open(argv[1], 'r')
+        nodes = []
 
-def fileImport(filename):
-    with open(filename, "r") as myfile:
-        Nodes = []
-        for line in myfile:
-            numArray = []
-            lineNumbers = line.split()
-            for num in lineNumbers:
-                numArray.append(int(num))
-            Nodes.append(Node([numArray[0], numArray[1], numArray[2]]))
+        for line in rfile:
+            coordinates = self.getCoordinates(line)
+            nodes.append(Node(coordinates))
 
-    return Nodes
+        return nodes
 
-def fileExport(filename, tour, distance):
-    with open(filename + ".tour", "w") as myFile:
-        myFile.write(str(distance) + '\n')
-        for city in tour:
-            myFile.write("%d\n" % city.idx)
+    """
+    description: Read each line and get the data of each node
+    params: line, The current line of the file
+    return: list with the idx, and cordinates of each node
+    """
+    def getCoordinates(self, line):
+        data = line.split()
+        
+        if len(data) == 3:
+            try:
+                coordinates = (str(data[0]), float(data[1]), float(data[2]))
+                return coordinates
+            except ValueError:
+                pass
 
-def calculateTotalDistance(route):
-    tot = 0
-    for idx in range(0, len(route)-1):
-        tot += calculateDistance(route[idx], route[idx+1])
-    tot += calculateDistance(route[len(route)-1], route[0])
+        return None
 
-    return tot
+    """
+    description: Run the algorithm and get the tour
+    return: tour of nodes
+    """
+    def run(self):
+        current = self.nodes[0]
 
-def findClosestNeighbor(v, route):
-    shortestEdgeLength = 99999999999
-    closestNeighbor = None
-    for c in route:
-        if c.idx != v.idx:
-            distance = calculateDistance(v, c)
-            if shortestEdgeLength > distance:
-                closestNeighbor = c
-                shortestEdgeLength = distance
+        while len(self.nodes) != len(self.tour):
+            self.tour.append(current)
+            arr_nodes = []
 
-    return closestNeighbor
+            for node in self.nodes:
+                if node not in self.tour:
+                    distance = current.distance(node)
 
-def nearestNeighbor(route):
-    new_route = []
-    current_node = route.pop(0)
-    new_route.append(current_node)
-    while route != []:
-        next = findClosestNeighbor(current_node, route)
-        current_node = next
-        route.remove(next)
-        new_route.append(current_node)
+                    arr_nodes.append({
+                        'distance': distance,
+                        'node': node
+                    })
 
-    return new_route
+            if len(arr_nodes) > 0:
+                if self.method == 1:
+                    current = self.getKbestNode(arr_nodes)
+                elif self.method == 2:
+                    current = self.getRCLNode(arr_nodes)
 
-def twoOptSwap(route, i, k):
-    new_route = []
-
-    # 1. take route[0] to route[i-1] and add them in order to new_route
-    for index in range(0, i):
-        new_route.append(route[index])
-
-    # 2. take route[i] to route[k] and add them in reverse order to new_route
-    for index in range(k, i-1, -1):
-        new_route.append(route[index])
-
-    # 3. take route[k+1] to end and add them in order to new_route
-    for index in range(k+1, len(route)):
-        new_route.append(route[index])
-
-    return new_route
-
-
-def find2optSolution(s, timeAvailable):
-    improvement = True
-    start = time.time()
-    end = start + timeAvailable
-    while improvement:
-        improvement = False
-        best_distance = calculateTotalDistance(s)
-        i = 1
-        while i < len(s):
-            for k in range(i+1, len(s)):
-                new_route = twoOptSwap(s, i, k)
-                new_distance = calculateTotalDistance(new_route)
-                if new_distance < best_distance:
-                    s = new_route
-                    best_distance = new_distance
-                    improvement = True
-                    i = 1
-                if time.time() > end:
-                    return s
             else:
-                i += 1
+                break
 
-    return s
+        self.tour.append(self.tour[0])
+        return self.tour
 
-def printTour(s):
-    sys.stdout.write("ORDER: ")
-    for c in s:
-        sys.stdout.write(str(c.idx) + ' ')
-    print('\n')
-    print("Distance: " + str(calculateTotalDistance(s)))
+    """
+    description: select randomly a node
+    return: selected node
+    """
+    def getKbestNode(self, arr_opts):
+        arr_opts = sorted(arr_opts, key=itemgetter('distance'))
+        arr_kbest = []
+        counter = 0
+
+        for i in range(0, len(arr_opts)):
+            if counter < self.k:
+                arr_kbest.append(arr_opts[i])
+                counter += 1
+        
+
+        index_rdm = random.randint(0, len(arr_kbest) - 1)
+        selected = arr_kbest[index_rdm]
+
+        return selected['node']
+
+    """
+    description: Get the register candidate list
+    return: selected node 
+    """
+    def getRCLNode(self, arr_opts):
+        arr_opts = sorted(arr_opts, key=itemgetter('distance'))
+        cmin = arr_opts[0]['distance']
+        cmax = arr_opts[len(arr_opts)-1]['distance']
+        rcl = []
+
+        for opt in arr_opts:
+            if cmin <= opt['distance'] <= cmin + self.alpha * (cmax - cmin):
+                rcl.append(opt)
+
+        index_rdm = random.randint(0, len(rcl) - 1)
+        selected = rcl[index_rdm]
+        return selected['node']
+
+    """
+    description: Calculate the distance in a array of nodes
+    return: integer, distance
+    """
+    def distanceTour(self, path=None):
+        distance = 0
+
+        if path == None:
+            path = self.tour
+
+        for i in range(len(path)):
+            distance += int(path[i].distance(path[i + 1]))
+            if i + 1 == len(path) - 1:
+                break
+
+        return distance
+
+    """
+    description: Maxe a string with all nodes on the route
+    return: String tour
+    """
+    def resultPath(self, path=None):
+        result_path = ''
+
+        if path == None:
+            path = self.tour
+
+        for i in range(0, len(path)):
+            if i == len(path) - 1:
+                result_path += path[i].idx
+            else:
+                result_path += path[i].idx + ' -> '
+
+        return result_path
 
 def main():
     start = time.time()
-    betterFound = 999999999999
-    finalTour = []
-
-    # Get file by param
-    if len(sys.argv) < 2:
-        print("Please enter the file name.")
-        exit()
-    filename = sys.argv[1]
-
-    # Get 2opt execution time
-    if len(sys.argv) >= 3:
-        twoOptTime = float(sys.argv[2]) * 60 - 1
-    else:
-        twoOptTime = 179.0
-
-    # Get global iterations
-    if len(sys.argv) >= 4:
-        globalIterations = int(sys.argv[3])
+    k = 1
+    alpha = 0
+    min_distance = 999999999999
+    
+    # Number of global iterations
+    if len(argv) >= 3:
+        globalIterations = int(argv[2])
     else:
         globalIterations = 1
 
-    # Init global loop
-    globalCounterIterator = 0
-    while True:
-        # print("--------------------------------------------------------")
-        globalCounterIterator += 1
+    # Get 2opt execution time (minutes)
+    if len(argv) >= 4:
+        twoOptTime = float(argv[3]) * 60 - 1
+    else:
+        twoOptTime = 179.0
 
-        s = fileImport(filename)
-        greedy = nearestNeighbor(s)
+    c =  'Method\n'
+    c += '1) K-Best\n'
+    c += '2) RCL\n'
+    c += 'method: '
+    method = int(input(c))
 
-        s = fileImport(filename) # Reset the array of nodes
+    if method == 1:
+        k = int(input('K: '))
 
-        # print("\nAFTER NEAREST NEIGHBOR PASS")
-        # printTour(greedy)
+    if method == 2:
+        alpha = float(input('ALPHA (0 a 1): '))
 
-        if calculateTotalDistance(greedy) < calculateTotalDistance(s):
-            s = greedy
-        else:
-            print("Greedy solution discarded.")
+    for i in range(0, globalIterations):
+        nearest_neighbor = NearestNeighbor(k, alpha, method)
+        tour = nearest_neighbor.run()
 
-        time2optAvailable = twoOptTime - (time.time() - start)
-        s = find2optSolution(s, time2optAvailable)
-        s.append(s[0])
+        twoOpt = TwoOpt(tour, twoOptTime)
+        neighbor_tour = twoOpt.run()
 
-        # print("\nAFTER 2OPT")
-        # printTour(s)
+        distance = twoOpt.distanceTour(neighbor_tour)
+        if distance < min_distance:
+            min_distance = distance
+            min_tour_path = twoOpt.resultPath(neighbor_tour)
+            min_tour = neighbor_tour
 
-        # print("--------------------------------------------------------")
-
-        if betterFound > calculateTotalDistance(s):
-            finalTour = s
-            betterFound = calculateTotalDistance(s)
-
-        if globalCounterIterator >= globalIterations:
+        if (time.time() - start) > (60 * 2):
             break
 
+    print('----- Final Result -----\n')
     end = time.time()
-    timeElapsed = end - start
-    printTour(finalTour)
-    print("TIME ALLOCATED: %f" % (twoOptTime + 1))
-    print("TIME USED: %f" % timeElapsed)
-    Path(finalTour)
+    elapsed = end - start
+    print(f'Minimum tour: {min_tour_path}')
+    print(f'Minimum distance: {min_distance}')
+    print(f'Time of execution: {elapsed}')
+    Path(min_tour)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
