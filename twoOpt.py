@@ -16,7 +16,7 @@ class TwoOpt():
             i = 1
             while i < len(s):
                 for k in range(i+1, len(s)):
-                    new_route = self.twoOptSwap(s, i, k)
+                    new_route = self.swap(s, i, k)
                     new_distance = self.distanceTour(new_route)
                     if new_distance < best_distance:
                         s = new_route
@@ -29,7 +29,7 @@ class TwoOpt():
                     i += 1
         return s
 
-    def twoOptSwap(self, route, i, k):
+    def swap(self, route, i, k):
         new_route = []
 
         # 1. take route[0] to route[i-1] and add them in order to new_route
