@@ -46,8 +46,11 @@ def getNodes(node_file):
     nodes = []
 
     for line in rfile:
+        if 'optimal' in line:
+            break
         coordinates = getCoordinates(line)
         nodes.append(Node(coordinates))
+    rfile.close()
 
     return nodes
 
@@ -88,6 +91,13 @@ def main():
         alpha = float(input('ALPHA (0 a 1): '))
 
     nodes = getNodes(node_file)
+    optimal = 0
+    rfile = open(node_file, 'r')
+    for line in rfile:
+        if 'optimal' in line:
+            data = line.split()
+            optimal = int(data[len(data) - 1])
+    rfile.close()
 
     for i in range(0, globalIterations):
         nearest_neighbor = NearestNeighbor(nodes, k, alpha, method)
@@ -122,6 +132,8 @@ def main():
         data.append(alpha)
     data.append(elapsed)
     data.append(min_distance)
+    data.append(optimal)
+    data.append(str(round((1 - optimal / min_distance) * 10000) / 100) + '%')
 
     generateFile(data, method)
     Path(min_tour)
