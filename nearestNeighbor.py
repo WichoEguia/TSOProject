@@ -1,45 +1,13 @@
-from Node import Node
 import random
 from operator import itemgetter
 
 class NearestNeighbor():
-    def __init__(self, filename, k=1, alpha=0, method=1):
-        self.nodes = self.getNodes(filename)
+    def __init__(self, nodes, k=1, alpha=0, method=1):
+        self.nodes = nodes
         self.tour = []
         self.k = k
         self.alpha = alpha
         self.method = method
-
-    """
-    description: Get the set of nodes from the file pased
-    return: the set of all the nodes
-    """
-    def getNodes(self, filename):
-        rfile = open(filename, 'r')
-        nodes = []
-
-        for line in rfile:
-            coordinates = self.getCoordinates(line)
-            nodes.append(Node(coordinates))
-
-        return nodes
-
-    """
-    description: Read each line and get the data of each node
-    params: line, The current line of the file
-    return: list with the idx, and cordinates of each node
-    """
-    def getCoordinates(self, line):
-        data = line.split()
-
-        if len(data) == 3:
-            try:
-                coordinates = (str(data[0]), float(data[1]), float(data[2]))
-                return coordinates
-            except ValueError:
-                pass
-
-        return None
 
     """
     description: Run the algorithm and get the tour

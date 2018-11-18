@@ -4,6 +4,7 @@ import time
 from twoOpt import TwoOpt
 from TspPath import Path
 import xlrd
+from Node import Node
 
 def generateFile(data, method):
     if method == 1:
@@ -19,6 +20,37 @@ def generateFile(data, method):
     results_file.write(data_str)
     results_file.close()
 
+"""
+description: Read each line and get the data of each node
+params: line, The current line of the file
+return: list with the idx, and cordinates of each node
+"""
+def getCoordinates(line):
+    data = line.split()
+
+    if len(data) == 3:
+        try:
+            coordinates = (str(data[0]), float(data[1]), float(data[2]))
+            return coordinates
+        except ValueError:
+            pass
+
+    return None
+
+"""
+description: Get the set of nodes from the file pased
+return: the set of all the nodes
+"""
+def getNodes(node_file):
+    rfile = open(node_file, 'r')
+    nodes = []
+
+    for line in rfile:
+        coordinates = getCoordinates(line)
+        nodes.append(Node(coordinates))
+
+    return nodes
+
 def main():
     start = time.time()
     k = 1
@@ -29,7 +61,7 @@ def main():
     if len(argv) < 2:
         print("Please enter the file name.")
         exit()
-    filename = argv[1]
+    node_file = argv[1]
     
     # Number of global iterations
     if len(argv) >= 3:
@@ -55,8 +87,10 @@ def main():
     if method == 2:
         alpha = float(input('ALPHA (0 a 1): '))
 
+    nodes = getNodes(node_file)
+
     for i in range(0, globalIterations):
-        nearest_neighbor = NearestNeighbor(filename, k, alpha, method)
+        nearest_neighbor = NearestNeighbor(nodes, k, alpha, method)
         tour = nearest_neighbor.run()
 
         twoOpt = TwoOpt(tour, twoOptTime)
