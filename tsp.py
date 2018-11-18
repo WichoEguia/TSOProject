@@ -3,6 +3,21 @@ from sys import argv
 import time
 from twoOpt import TwoOpt
 from TspPath import Path
+import xlrd
+
+def generateFile(data, method):
+    if method == 1:
+        results_file = open('results_k.csv', 'a+')
+    elif method == 2:
+        results_file = open('results_alpha.csv', 'a+')
+    data_str = ''
+    for d in range(len(data)):
+        if d == len(data) - 1:
+            data_str += str(data[d]) + '\n'
+        else:
+            data_str += str(data[d]) + '; '
+    results_file.write(data_str)
+    results_file.close()
 
 def main():
     start = time.time()
@@ -58,10 +73,23 @@ def main():
 
     print('----- Final Result -----\n')
     end = time.time()
-    elapsed = end - start
+    elapsed = round((end - start) * 100) / 100
     print(f'Minimum tour: {min_tour_path}')
     print(f'Minimum distance: {min_distance}')
     print(f'Time of execution: {elapsed}')
+
+    data = []
+    data.append(argv[1][7:])
+    data.append(globalIterations if len(argv) >= 3 else 1)
+    data.append(twoOptTime + 1 if len(argv) >= 4 else 180.0)
+    if method == 1:
+        data.append(k)
+    elif method == 2:
+        data.append(alpha)
+    data.append(elapsed)
+    data.append(min_distance)
+
+    generateFile(data, method)
     Path(min_tour)
 
 if __name__ == '__main__':

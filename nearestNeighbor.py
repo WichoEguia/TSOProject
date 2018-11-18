@@ -14,7 +14,6 @@ class NearestNeighbor():
     description: Get the set of nodes from the file pased
     return: the set of all the nodes
     """
-
     def getNodes(self, filename):
         rfile = open(filename, 'r')
         nodes = []
@@ -30,7 +29,6 @@ class NearestNeighbor():
     params: line, The current line of the file
     return: list with the idx, and cordinates of each node
     """
-
     def getCoordinates(self, line):
         data = line.split()
 
@@ -47,7 +45,6 @@ class NearestNeighbor():
     description: Run the algorithm and get the tour
     return: tour of nodes
     """
-
     def run(self):
         current = self.nodes[0]
 
@@ -80,7 +77,6 @@ class NearestNeighbor():
     description: select randomly a node
     return: selected node
     """
-
     def getKbestNode(self, arr_opts):
         arr_opts = sorted(arr_opts, key=itemgetter('distance'))
         arr_kbest = []
@@ -100,7 +96,6 @@ class NearestNeighbor():
     description: Get the register candidate list
     return: selected node 
     """
-
     def getRCLNode(self, arr_opts):
         arr_opts = sorted(arr_opts, key=itemgetter('distance'))
         cmin = arr_opts[0]['distance']
@@ -119,7 +114,6 @@ class NearestNeighbor():
     description: Calculate the distance in a array of nodes
     return: integer, distance
     """
-
     def distanceTour(self, path=None):
         distance = 0
 
@@ -137,7 +131,6 @@ class NearestNeighbor():
     description: Maxe a string with all nodes on the route
     return: String tour
     """
-
     def resultPath(self, path=None):
         result_path = ''
 
