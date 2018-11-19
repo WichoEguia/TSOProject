@@ -1,0 +1,5 @@
+Instance; Global Iterations; 2-Opt time; k value; Execution time; Result; Optimal distance; Gap
+tsp3.txt; 1; 1200.0; 1; 1217.31; 1390; 1368; 1.58%
+tsp3.txt; 3; 300.0; 4; 934.11; 2769; 1368; 50.6%
+tsp3.txt; 2; 600.0; 3; 1236.77; 2168; 1368; 36.9%
+tsp3.txt; 2; 1200.0; 2; 1218.35; 1745; 1368; 21.6%

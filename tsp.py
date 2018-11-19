@@ -74,7 +74,7 @@ def main():
 
     # Get 2opt execution time (minutes)
     if len(argv) >= 4:
-        twoOptTime = float(argv[3]) * 60 - 1
+        twoOptTime = float(argv[3]) * 60
     else:
         twoOptTime = 179.0
 
@@ -90,6 +90,8 @@ def main():
     if method == 2:
         alpha = float(input('ALPHA (0 a 1): '))
 
+    globalTime = float(input('Global time: ')) * 60
+
     nodes = getNodes(node_file)
     optimal = 0
     rfile = open(node_file, 'r')
@@ -99,12 +101,14 @@ def main():
             optimal = int(data[len(data) - 1])
     rfile.close()
 
-    for i in range(0, globalIterations):
+    currentIteration = 0
+    while True:
         nearest_neighbor = NearestNeighbor(nodes, k, alpha, method)
         tour = nearest_neighbor.run()
 
         twoOpt = TwoOpt(tour, twoOptTime)
         neighbor_tour = twoOpt.run()
+        # Path(neighbor_tour)
 
         distance = twoOpt.distanceTour(neighbor_tour)
         if distance < min_distance:
@@ -112,8 +116,12 @@ def main():
             min_tour_path = twoOpt.resultPath(neighbor_tour)
             min_tour = neighbor_tour
 
-        # if (time.time() - start) > (60 * 2):
-        #     break
+        currentIteration += 1
+        if currentIteration >= globalIterations:
+            break
+
+        if (time.time() - start) > globalTime:
+            break
 
     print('----- Final Result -----\n')
     end = time.time()
@@ -125,7 +133,7 @@ def main():
     data = []
     data.append(argv[1][7:])
     data.append(globalIterations if len(argv) >= 3 else 1)
-    data.append(twoOptTime + 1 if len(argv) >= 4 else 180.0)
+    data.append(twoOptTime if len(argv) >= 4 else 180.0)
     if method == 1:
         data.append(k)
     elif method == 2:
