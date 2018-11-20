@@ -90,8 +90,6 @@ def main():
     if method == 2:
         alpha = float(input('ALPHA (0 a 1): '))
 
-    globalTime = float(input('Global time: ')) * 60
-
     nodes = getNodes(node_file)
     optimal = 0
     rfile = open(node_file, 'r')
@@ -118,9 +116,6 @@ def main():
 
         currentIteration += 1
         if currentIteration >= globalIterations:
-            break
-
-        if (time.time() - start) > globalTime:
             break
 
     print('----- Final Result -----\n')
