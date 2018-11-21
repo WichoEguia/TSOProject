@@ -105,14 +105,14 @@ def main():
         tour = nearest_neighbor.run()
 
         twoOpt = TwoOpt(tour, twoOptTime)
-        neighbor_tour = twoOpt.run()
+        tour = twoOpt.run()
         # Path(neighbor_tour)
 
-        distance = twoOpt.distanceTour(neighbor_tour)
+        distance = twoOpt.distanceTour(tour)
         if distance < min_distance:
             min_distance = distance
-            min_tour_path = twoOpt.resultPath(neighbor_tour)
-            min_tour = neighbor_tour
+            min_tour_path = twoOpt.resultPath(tour)
+            min_tour = tour
 
         currentIteration += 1
         if currentIteration >= globalIterations:
